@@ -363,134 +363,205 @@ def generate_individual_descriptions(image_paths):
     
     return descriptions
 
+# def generate_combined_analysis(descriptions):
+#     client = get_openai_client()
+    
+#     # Comprehensive whole-body analysis prompt
+#     combined_prompt = """
+#     You are an expert exercise physiologist and biomechanics specialist. Analyze all these frame descriptions and create a comprehensive exercise analysis with detailed attention to FULL BODY mechanics, form, and positioning.
+    
+#     Pay special attention to:
+#     1. COMPLETE BODY ALIGNMENT and posture throughout the movement
+#     2. JOINT ANGLES and positions at different movement phases
+#     3. MUSCLE ENGAGEMENT patterns based on body positioning
+#     4. MOVEMENT QUALITY and technical execution
+#     5. EXERCISE-SPECIFIC biomechanical considerations
+    
+#     Return analysis in this EXACT JSON format:
+    
+#     {
+#       "Exercise Identification": {
+#         "Primary Exercise": "Assisted Chin-Up",
+#         "Specific Variation": "Reverse Wide Grip",
+#         "Movement Pattern": "Vertical Pull",
+#         "Equipment Used": ["Pull-up bar", "Resistance band"]
+#       },
+#       "Biomechanical Analysis": {
+#         "Starting Position": {
+#           "Body Alignment": "Full body hang with neutral spine",
+#           "Joint Angles": "Arms fully extended, shoulders packed",
+#           "Muscle Status": "Lats and biceps in stretched position"
+#         },
+#         "Mid-Movement": {
+#           "Body Alignment": "Maintained neutral spine, slight lean back",
+#           "Joint Angles": "Elbows flexed to 90 degrees, shoulders externally rotated",
+#           "Muscle Engagement": "Peak lat and biceps contraction"
+#         },
+#         "End Position": {
+#           "Body Alignment": "Chin over bar, chest elevated",
+#           "Joint Angles": "Elbows fully flexed, shoulders depressed",
+#           "Muscle Status": "Fully contracted upper back and arms"
+#         }
+#       },
+#       "Whole Body Form Assessment": {
+#         "Upper Body": {
+#           "Shoulder Position": "Properly packed and stable",
+#           "Elbow Alignment": "Tracking correctly without flare",
+#           "Chest Position": "Elevated and proud",
+#           "Head Position": "Neutral neck alignment"
+#         },
+#         "Core and Midsection": {
+#           "Spinal Alignment": "Maintained neutral spine throughout",
+#           "Core Engagement": "Appropriate bracing and stability",
+#           "Rib Cage Position": "Not flared, properly aligned"
+#         },
+#         "Lower Body": {
+#           "Hip Position": "Slight posterior tilt for stability",
+#           "Leg Alignment": "Straight with engaged glutes",
+#           "Foot Position": "Pointed or neutral, not swinging"
+#         }
+#       },
+#       "Muscle Engagement Analysis": {
+#         "Primary Muscles": ["Latissimus Dorsi", "Biceps Brachii", "Teres Major"],
+#         "Secondary Muscles": ["Rhomboids", "Trapezius", "Forearms"],
+#         "Stabilizer Muscles": ["Core muscles", "Glutes", "Shoulder stabilizers"],
+#         "Engagement Patterns": "Proper sequencing from lats to arms"
+#       },
+#       "Technical Execution": {
+#         "Range of Motion": "Full extension to chin over bar",
+#         "Tempo Control": "Controlled concentric and eccentric",
+#         "Form Quality": "Excellent technical execution",
+#         "Common Errors": ["Using momentum", "Incomplete range of motion"]
+#       },
+#       "Step-by-Step Instructions": [
+#         "Step 1: Set up with proper grip and body alignment",
+#         "Step 2: Engage core and depress shoulders",
+#         "Step 3: Initiate pull with back muscles",
+#         "Step 4: Continue pulling until chin clears bar",
+#         "Step 5: Lower with control maintaining form"
+#       ],
+#       "Benefits": [
+#         "Develops upper body pulling strength",
+#         "Improves back muscle development",
+#         "Enhances grip strength and endurance",
+#         "Builds core stability during pulling motions"
+#       ],
+#       "Progressions and Variations": [
+#         "Reduce assistance gradually",
+#         "Try different grip variations",
+#         "Add tempo variations for difficulty"
+#       ],
+#       "Safety Considerations": [
+#         "Maintain shoulder stability throughout",
+#         "Avoid kipping or swinging motions",
+#         "Ensure proper warm-up for shoulder health"
+#       ]
+#     }
+    
+#     Here are the individual frame descriptions from the video:
+#     """ + "\n\n".join([f"FRAME {i+1} ANALYSIS:\n{desc}\n" for i, desc in enumerate(descriptions)]) + """
+    
+#     CRITICAL: Provide extremely detailed analysis of the WHOLE BODY positioning, alignment, and biomechanics. Focus on how all body parts work together in the movement.
+    
+#     Please **ONLY** return a JSON response in the exact format above. No extra text, no explanations, and no other information.
+#     """
+    
+#     # Get final comprehensive analysis
+#     response = client.chat.completions.create(
+#         model="gpt-4o",
+#         messages=[
+#             {
+#                 "role": "system", 
+#                 "content": "You are an expert exercise physiologist and biomechanics specialist with deep knowledge of full-body movement patterns, joint mechanics, and muscular engagement. You can analyze complete body positioning and provide detailed technical feedback."
+#             },
+#             {
+#                 "role": "user", 
+#                 "content": combined_prompt
+#             }
+#         ],
+#         temperature=0.1,
+#     )
+
+#     response_content = response.choices[0].message.content
+
+#     try:
+#         response_json = json.loads(response_content.replace("```json", "").replace("```", ""))
+#         print(response_json)
+#         return response_json
+#     except json.JSONDecodeError:
+#         print("Failed to parse the response as JSON. Raw response:")
+#         print(response_content)
+#         return response_content
+
+
 def generate_combined_analysis(descriptions):
+    import json
     client = get_openai_client()
-    
-    # Comprehensive whole-body analysis prompt
+
+    # Lean, high-signal prompt
     combined_prompt = """
-    You are an expert exercise physiologist and biomechanics specialist. Analyze all these frame descriptions and create a comprehensive exercise analysis with detailed attention to FULL BODY mechanics, form, and positioning.
-    
-    Pay special attention to:
-    1. COMPLETE BODY ALIGNMENT and posture throughout the movement
-    2. JOINT ANGLES and positions at different movement phases
-    3. MUSCLE ENGAGEMENT patterns based on body positioning
-    4. MOVEMENT QUALITY and technical execution
-    5. EXERCISE-SPECIFIC biomechanical considerations
-    
-    Return analysis in this EXACT JSON format:
-    
-    {
-      "Exercise Identification": {
-        "Primary Exercise": "Assisted Chin-Up",
-        "Specific Variation": "Reverse Wide Grip",
-        "Movement Pattern": "Vertical Pull",
-        "Equipment Used": ["Pull-up bar", "Resistance band"]
-      },
-      "Biomechanical Analysis": {
-        "Starting Position": {
-          "Body Alignment": "Full body hang with neutral spine",
-          "Joint Angles": "Arms fully extended, shoulders packed",
-          "Muscle Status": "Lats and biceps in stretched position"
-        },
-        "Mid-Movement": {
-          "Body Alignment": "Maintained neutral spine, slight lean back",
-          "Joint Angles": "Elbows flexed to 90 degrees, shoulders externally rotated",
-          "Muscle Engagement": "Peak lat and biceps contraction"
-        },
-        "End Position": {
-          "Body Alignment": "Chin over bar, chest elevated",
-          "Joint Angles": "Elbows fully flexed, shoulders depressed",
-          "Muscle Status": "Fully contracted upper back and arms"
-        }
-      },
-      "Whole Body Form Assessment": {
-        "Upper Body": {
-          "Shoulder Position": "Properly packed and stable",
-          "Elbow Alignment": "Tracking correctly without flare",
-          "Chest Position": "Elevated and proud",
-          "Head Position": "Neutral neck alignment"
-        },
-        "Core and Midsection": {
-          "Spinal Alignment": "Maintained neutral spine throughout",
-          "Core Engagement": "Appropriate bracing and stability",
-          "Rib Cage Position": "Not flared, properly aligned"
-        },
-        "Lower Body": {
-          "Hip Position": "Slight posterior tilt for stability",
-          "Leg Alignment": "Straight with engaged glutes",
-          "Foot Position": "Pointed or neutral, not swinging"
-        }
-      },
-      "Muscle Engagement Analysis": {
-        "Primary Muscles": ["Latissimus Dorsi", "Biceps Brachii", "Teres Major"],
-        "Secondary Muscles": ["Rhomboids", "Trapezius", "Forearms"],
-        "Stabilizer Muscles": ["Core muscles", "Glutes", "Shoulder stabilizers"],
-        "Engagement Patterns": "Proper sequencing from lats to arms"
-      },
-      "Technical Execution": {
-        "Range of Motion": "Full extension to chin over bar",
-        "Tempo Control": "Controlled concentric and eccentric",
-        "Form Quality": "Excellent technical execution",
-        "Common Errors": ["Using momentum", "Incomplete range of motion"]
-      },
-      "Step-by-Step Instructions": [
-        "Step 1: Set up with proper grip and body alignment",
-        "Step 2: Engage core and depress shoulders",
-        "Step 3: Initiate pull with back muscles",
-        "Step 4: Continue pulling until chin clears bar",
-        "Step 5: Lower with control maintaining form"
-      ],
-      "Benefits": [
-        "Develops upper body pulling strength",
-        "Improves back muscle development",
-        "Enhances grip strength and endurance",
-        "Builds core stability during pulling motions"
-      ],
-      "Progressions and Variations": [
-        "Reduce assistance gradually",
-        "Try different grip variations",
-        "Add tempo variations for difficulty"
-      ],
-      "Safety Considerations": [
-        "Maintain shoulder stability throughout",
-        "Avoid kipping or swinging motions",
-        "Ensure proper warm-up for shoulder health"
-      ]
-    }
-    
-    Here are the individual frame descriptions from the video:
-    """ + "\n\n".join([f"FRAME {i+1} ANALYSIS:\n{desc}\n" for i, desc in enumerate(descriptions)]) + """
-    
-    CRITICAL: Provide extremely detailed analysis of the WHOLE BODY positioning, alignment, and biomechanics. Focus on how all body parts work together in the movement.
-    
-    Please **ONLY** return a JSON response in the exact format above. No extra text, no explanations, and no other information.
-    """
-    
-    # Get final comprehensive analysis
+You are an expert exercise physiologist and biomechanics specialist. Analyze the frames below and produce a SINGLE, concise, user-facing analysis.
+
+STRICT RULES:
+- Output **ONLY** valid JSON using the **exact schema** shown below (same keys, same nesting).
+- No Markdown, no code fences, no extra text.
+- Be concise and high quality. Prefer precision over length.
+- Base every claim on visible cues from the frames. If something isn’t visible/knowable, write "Unknown".
+- Limit lists to a maximum of 5 items.
+- Keep each string under ~160 characters.
+
+JSON SCHEMA (fill with your findings—do not leave placeholders empty unless truly "Unknown"):
+{
+  "Exercise Identification": {
+    "Primary Exercise": "",
+    "Specific Variation": "",
+    "Movement Pattern": "",
+    "Equipment Used": []
+  },
+  "Muscle Engagement Analysis": {
+    "Primary Muscles": [],
+    "Secondary Muscles": [],
+    "Stabilizer Muscles": []
+  },
+  "Step-by-Step Instructions": []
+}
+
+INTERPRETATION GUIDELINES:
+- Identify the most likely exercise and variation from posture, grip, path of motion, and equipment.
+- For muscles, list the **most engaged** based on joint actions and positions visible across frames.
+- Steps should read like crisp coaching cues (4–6 steps), action-first, covering setup → execution → return.
+- Avoid repetition of frame text; synthesize across all frames.
+
+FRAMES:
+""" + "\n\n".join([f"FRAME {i+1}:\n{desc}" for i, desc in enumerate(descriptions)])
+
     response = client.chat.completions.create(
         model="gpt-4o",
         messages=[
             {
-                "role": "system", 
-                "content": "You are an expert exercise physiologist and biomechanics specialist with deep knowledge of full-body movement patterns, joint mechanics, and muscular engagement. You can analyze complete body positioning and provide detailed technical feedback."
+                "role": "system",
+                "content": (
+                    "You are an expert exercise physiologist and biomechanics specialist with deep "
+                    "knowledge of movement patterns, joint mechanics, and muscular engagement. "
+                    "Your output must be accurate, concise, and strictly follow the requested JSON schema."
+                )
             },
-            {
-                "role": "user", 
-                "content": combined_prompt
-            }
+            {"role": "user", "content": combined_prompt}
         ],
         temperature=0.1,
+        # If your SDK supports this, it helps enforce JSON-only output. If not, you can remove it.
+        response_format={"type": "json_object"}
     )
 
     response_content = response.choices[0].message.content
 
     try:
-        response_json = json.loads(response_content.replace("```json", "").replace("```", ""))
-        print(response_json)
+        response_json = json.loads(
+            response_content.replace("```json", "").replace("```", "")
+        )
         return response_json
     except json.JSONDecodeError:
-        print("Failed to parse the response as JSON. Raw response:")
-        print(response_content)
+        # Fallback so you can inspect the raw model output
         return response_content
 
 # Keep the original function for backward compatibility
