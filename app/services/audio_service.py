@@ -43,12 +43,12 @@ def create_precise_audio(text, target_duration, output_filename):
     
     # Check duration and adjust if needed
     audio = AudioSegment.from_mp3(output_filename)
-    current_duration = len(audio) / 1000
+    # current_duration = len(audio) / 1000
     
-    if abs(current_duration - target_duration) > 1.0:  # If more than 1 second difference
-        # Adjust speech rate to match target duration
-        speed_factor = current_duration / target_duration
-        adjusted_audio = audio.speedup(playback_speed=speed_factor)
-        adjusted_audio.export(output_filename, format="mp3")
+    # if abs(current_duration - target_duration) > 1.0:  # If more than 1 second difference
+    #     # Adjust speech rate to match target duration
+    #     speed_factor = current_duration / target_duration
+    #     adjusted_audio = audio.speedup(playback_speed=speed_factor)
+    #     adjusted_audio.export(output_filename, format="mp3")
     
     return output_filename

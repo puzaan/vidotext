@@ -179,6 +179,7 @@ from app.services.video_processor import extract_keyframes
 from app.services.openai_service import generate_individual_descriptions, generate_combined_analysis
 from app.services.audio_service import generate_instruction_audio  # Updated import - removed get_video_duration
 
+from app.services.updated_audio import process_video_for_audio
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -285,6 +286,44 @@ async def generate_audio_instructions(file: UploadFile = File(...)):
                     
         raise HTTPException(status_code=500, detail=f"Error generating audio instructions: {str(e)}")
 
+
+
+
+
+@router.post("/generate-audio-instructions-2", summary="Generate exercise instructions audio", tags=["Audio Instructions"])
+async def generate_audio_instructions2(file: UploadFile = File(...)):
+    """
+    Generate step-by-step exercise audio instructions from an uploaded video
+    """
+    try:
+        # Validate file type
+        if not file.filename.lower().endswith(('.mp4', '.avi', '.mov', '.mkv', '.webm')):
+            raise HTTPException(status_code=400, detail="Invalid file format. Please upload a video file.")
+
+        # Save uploaded video to temp location
+        file_ext = file.filename.split('.')[-1]
+        video_filename = os.path.join(settings.UPLOAD_DIR, f"{uuid.uuid4().hex}.{file_ext}")
+        with open(video_filename, "wb") as f:
+            shutil.copyfileobj(file.file, f)
+
+        # 🔥 Use new pipeline (detailed, natural instructions)
+        audio_filename, script_text = process_video_for_audio(video_filename)
+
+        # Cleanup video
+        if os.path.exists(video_filename):
+            os.remove(video_filename)
+
+        return {
+            "audio_url": f"/audio/{os.path.basename(audio_filename)}",
+            "text_url": f"/audio/{os.path.basename(audio_filename).replace('.mp3', '.txt')}",
+            "message": "Audio instructions generated successfully (natural coaching style)."
+        }
+
+    except Exception as e:
+        logger.error(f"Error generating audio instructions: {str(e)}")
+        if 'video_filename' in locals() and os.path.exists(video_filename):
+            os.remove(video_filename)
+        raise HTTPException(status_code=500, detail=f"Error generating audio instructions: {str(e)}")
 
 
 
